@@ -7,7 +7,8 @@ MPC(Model Predictive Control) is another important control method in the self-dr
 
 ## The Model
 The vehicle model is required for implement MPC. I am using simplified bicycle model, such as: 
-```      //The length from front wheel to CoG Lf = 2.67m;
+```
+      // The length from front wheel to CoG Lf = 2.67m;
       
       // x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
       // y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
@@ -20,12 +21,100 @@ The vehicle state has 6 elements, x position, y position, heading psi, speed, cr
 The state can be in globle coordinations system or local vehicle coordination. 
 
 ## Timestep and Duration
-MPC 
+
+Model prediction is based on how many timestep projected into future. Depended on computing power and results, I tested 25 timesteps, each step took 0.02 sec seems match with other parameters in my setting. It yeilds 25*0.02 = 0.5 sec into the future. It is enough to overcome 0.1 sec latency and fairly smooth drive behavior. 
 
 ## Transforming
+```
+{"ptsx":[70.40827,61.24355,45.30827,36.03354,15.90826,5.64827],"ptsy":[157.101,155.4194,151.201,148.141,140.121,135.321],"psi_unity":4.534025,"psi":3.319957,"x":62.92501,"y":157.1006,"steering_angle":-0.01871635,"throttle":1,"speed":54.3903}
+```
+The waypoints and car states come from the simulator are presented in global map coordinate. I used two steps to transform them into vehicle coordinate for display and controls. 
+
+First, I create a translation matrix from car location (px, py) to (0,0)
+```
+  Eigen::MatrixXd T(3, 3);
+  T << 1, 0, -px,
+       0, 1, -py,
+       0, 0,  1;
+```
+Second, I create a rotation matrix from current (psi) to (0)
+```
+  Eigen::MatrixXd R(3, 3);
+  R << cos(-psi), -sin(-psi), 0,
+       sin(-psi), cos(-psi), 	0,
+       0,   	  0, 		1;
+
+```
+
+Then, create Waypoint Matrix and vehicle coordinate Matrix 
+```  
+  Eigen::MatrixXd wps(3, ptsx.size());
+  ... ...
+  
+  Eigen:: MatrixXd car(3, ptsx.size());
+  car = R * T * wps;
+```
+The trick is take current car states, it makes the waypoints display stick to the track center line.   
+
 ## Polynomial Fitting
+After the transform, we get 6-7 waypoints in vehicle coordinate. We can just plot them on simulator, or do a better job to fit into polynomial curve. This will help us project further, and make smoother curve. 
+
+I am fitting 3 order polynomial, and verify it with 22 points calculated by the formular, with 2 points in the past, 20 points in future.   
+```
+          // Fit polynomial with order 3
+                   
+          auto coeffs = Eigen::VectorXd(4);
+          
+          coeffs = polyfit(next_x, next_y, 3);
+
+          next_x_vals.clear();
+          next_y_vals.clear();
+           
+          for (double x = -10; x <= 80; x += 4.0) {
+            // use `polyeval` to evaluate the x values.
+    	    auto ref = polyeval(coeffs, x);
+            next_x_vals.push_back(x);
+            next_y_vals.push_back(ref);
+          }         
+```
+The coeffs is saved for next MPC solving as well. 
+
 ## MPC Preprocessing
+
+Calculate cte in vehicle coordinates is simpler because car always at (0,0), and psi is 0. 
+```
+          // The cross track error is calculated by evaluating at polynomial at x, f(x)
+          // and subtracting y.
+
+	  double cte = polyeval(coeffs, 0) - 0;
+          //std::cout << "CTE at x = 0 point" << std::endl;
+          //std::cout << cte << std::endl;
+
+ 
+	  // Due to the sign starting at 0, the orientation error is -f'(x).
+	  // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
+	  double epsi = -atan(coeffs[1]);
+
+          // Six elements car state
+          Eigen::VectorXd car_state(6); 
+          // px, py, psi, speed, cte, epsi
+          car_state << 0, 0, 0, v, cte, epsi; 
+          
+          // Solve the path and actuation commands
+          auto act = mpc.Solve(car_state, coeffs, limit);
+```
+Instead of driving one speed for the whole track, I also added speed limits and pass it into the mpc.Solve function. 
+For long stratch, the car can go as fast as possible, like 85mph, and for sharp turns, go with 30mph.  
+```
+          fg[0] += CppAD::pow(vars[v_start + i] - limit, 2);
+```
+
 ## MPC with Latency
+
+Latency plays a huge rule in controller. If the system is fast enough, the actual latency is the time required for all calculations, it is about 0.02-0.03 sec on my setting. The driving is smooth and easy. When added the artifical latency 0.1 sec, it is about 5 times longer the computer to wait for the next state update, the transformed trajectory fly all over the place, the controller try to shot the moving target, and result a lot of overshooting. But we can't avoid the latency, as I increase the timesteps from 25 to 50, the computing time is about 0.1 sec. 
+
+My approach is to look into the future steps, make the actuator move based on most likely future moves.  
+
 ## Post Speed limits
 ## Fine Tune Cost
 ## Reflection
