@@ -2,8 +2,33 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ---
+## Objective
+MPC(Model Predictive Control) is another important control method in the self-driving car tool box. MPC has the ability to anticipate future events and can take control actions accordingly. PID and LQR controllers do not have this predictive ability. In this project, we will drive on the same track as PID controller project, but I expect much faster speed and smoother driving, especially at hard corners. To simulate the real driving experence, we must to handle 100ms latency, it is like 10 Hz update rate. 
 
-## Dependencies
+## The Model
+The vehicle model is required for implement MPC. I am using simplified bicycle model, such as: 
+`      //The length from front wheel to CoG Lf = 2.67m;
+      
+      // x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
+      // y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
+      // psi_[t+1] = psi[t] + v[t] / Lf * delta[t] * dt
+      // v_[t+1] = v[t] + a[t] * dt
+      // cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
+      // epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * dt
+`
+The vehicle state has 6 elements, x position, y position, heading psi, speed, cross track error, heading error. 
+The state can be in globle coordinations system or local vehicle coordination. 
+
+## Timestep and Duration
+MPC 
+
+## Transforming
+## Polynomial Fitting
+## MPC Preprocessing
+## MPC with Latency
+## Post Speed limits
+## Fine Tune Cost
+## Reflection
 
 * cmake >= 3.5
  * All OSes: [click here for installation instructions](https://cmake.org/install/)
