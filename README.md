@@ -124,8 +124,47 @@ The logic is at low speed, look ahead fewer steps, like 3-5 steps ahead, at high
 ```
 
 ## Post Speed limits
+The speed limits services two porpures: 
+- First, to make the simulation more realistic, the MPC controls both steering and speed. 
+- Second, at the end of the long high speed stratch, the controller get into super stable stage, it is not that sensitive to the error anymore, I need kick it out it's comfort zone, to make it sensitive again. 
+
 ## Fine Tune Cost
+
+There are few highlights to the cost function:
+- Allowing large cte for smooth curve
+- Following changing speed limits
+- Mininizing the steering movement is correlated with speed, high speed, small steering, low speed, larger steering.
+- Sequential actuation also correlated with speed, high speed, less steering change, low speed, allow more steering change. This will helping to fight with latency as well.
+
+```
+    // The part of the cost based on the reference state.
+    for (int i = 0; i < N; i++) {
+      fg[0] += 1.2*CppAD::pow(vars[cte_start + i] - ref_cte, 2);
+      fg[0] += CppAD::pow(vars[epsi_start + i] - ref_epsi, 2);
+      // Follow the posted speed limits
+      fg[0] += CppAD::pow(vars[v_start + i] - limit, 2);
+    }
+
+    // Minimize the use of actuators.
+    for (int i = 0; i < N - 1; i++) {
+      // punish the steering movement more at high speed, 
+      fg[0] += 0.00021*vars[v_start +i]*CppAD::pow(vars[delta_start + i], 2);
+      fg[0] += CppAD::pow(vars[a_start + i], 2);
+    }
+
+    // Minimize the value gap between sequential actuations.
+    for (int i = 0; i < N - 2; i++) {
+      // punish more at high speed
+      fg[0] += 20000*vars[v_start + i]*CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
+      fg[0] += 100*CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2);
+    }
+```
+
 ## Reflection
+
+
+
+
 
 * cmake >= 3.5
  * All OSes: [click here for installation instructions](https://cmake.org/install/)
