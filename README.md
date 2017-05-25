@@ -20,6 +20,7 @@ The vehicle model is required for implement MPC. I am using simplified bicycle m
 The vehicle state has 6 elements, x position, y position, heading psi, speed, cross track error, heading error. 
 The state can be in globle coordinations system or local vehicle coordination. 
 
+
 ## Timestep and Duration
 
 Model prediction is based on how many timestep projected into future. Depended on computing power and results, I tested 25 timesteps, each step took 0.02 sec seems match with other parameters in my setting. It yeilds 25*0.02 = 0.5 sec into the future. It is enough to overcome 0.1 sec latency and fairly smooth drive behavior. 
