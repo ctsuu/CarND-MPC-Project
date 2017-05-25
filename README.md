@@ -162,8 +162,16 @@ There are few highlights to the cost function:
 
 ## Reflection
 
+The MPC method is well suit for vehicle controls based on the following findings. 
+- MPC can handle larger latency. It is nature to look further is you drive faster. 
+- MPC is multiply input and multiply output controller, it controls steering and throttle together. 
+- Most of tuning are done in the cost function. It is easier to manage lot of nobles. 
 
+The downside is MPC resource hunger method. So carefully choose the timesteps and duration is very important. Otherwise, the computing delay is as bad as latency from the system as well. 
 
+## Future Work
+
+I am looking forward to build MPC controller on single board computer. 
 
 
 * cmake >= 3.5
