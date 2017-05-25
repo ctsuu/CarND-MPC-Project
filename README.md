@@ -7,7 +7,7 @@ MPC(Model Predictive Control) is another important control method in the self-dr
 
 ## The Model
 The vehicle model is required for implement MPC. I am using simplified bicycle model, such as: 
-`      //The length from front wheel to CoG Lf = 2.67m;
+```      //The length from front wheel to CoG Lf = 2.67m;
       
       // x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
       // y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
@@ -15,7 +15,7 @@ The vehicle model is required for implement MPC. I am using simplified bicycle m
       // v_[t+1] = v[t] + a[t] * dt
       // cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
       // epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * dt
-`
+```
 The vehicle state has 6 elements, x position, y position, heading psi, speed, cross track error, heading error. 
 The state can be in globle coordinations system or local vehicle coordination. 
 
