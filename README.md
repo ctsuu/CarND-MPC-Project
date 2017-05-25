@@ -114,6 +114,14 @@ For long stratch, the car can go as fast as possible, like 85mph, and for sharp 
 Latency plays a huge rule in controller. If the system is fast enough, the actual latency is the time required for all calculations, it is about 0.02-0.03 sec on my setting. The driving is smooth and easy. When added the artifical latency 0.1 sec, it is about 5 times longer the computer to wait for the next state update, the transformed trajectory fly all over the place, the controller try to shot the moving target, and result a lot of overshooting. But we can't avoid the latency, as I increase the timesteps from 25 to 50, the computing time is about 0.1 sec. 
 
 My approach is to look into the future steps, make the actuator move based on most likely future moves.  
+I passed all Solved 24 moves to main function, the gear range from 1 to 20 depends on speed and curve. 
+The logic is at low speed, look ahead fewer steps, like 3-5 steps ahead, at high speed, look ahead 20 steps. 
+5 steps x 0.02 sec = 0.1 sec, 20 x 0.02 sec = 0.4 sec. The look ahead amount just match or over the latency, it works. [https://www.youtube.com/watch?v=ft9qx-rjkN4]. 
+
+```
+          steer_value = -steering[gear];
+          throttle_value = throttle[gear];
+```
 
 ## Post Speed limits
 ## Fine Tune Cost
