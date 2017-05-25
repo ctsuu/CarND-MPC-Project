@@ -173,7 +173,12 @@ The downside is MPC resource hunger method. So carefully choose the timesteps an
 ## Future Work
 
 I am looking forward to build MPC controller on single board computer. 
+Also, the parameter can be fine tuned in order to follow tighter trojectory tolerance.  
+A buffer of actuators output may be used to save lot of calculation. 
 
+
+
+## Dependencies:
 
 * cmake >= 3.5
  * All OSes: [click here for installation instructions](https://cmake.org/install/)
